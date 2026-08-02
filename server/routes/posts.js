@@ -1,0 +1,70 @@
+const express = require('express');
+const router = express.Router();
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
+
+// GET all posts
+router.get('/', async (req, res) => {
+  try {
+    const posts = await prisma.post.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET single post by id
+router.get('/:id', async (req, res) => {
+  try {
+    const post = await prisma.post.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CREATE a post
+router.post('/', async (req, res) => {
+  try {
+    const { title, contentBody, status, userId } = req.body;
+    const post = await prisma.post.create({
+      data: { title, contentBody, status, userId }
+    });
+    res.status(201).json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// UPDATE a post
+router.put('/:id', async (req, res) => {
+  try {
+    const { title, contentBody, status } = req.body;
+    const post = await prisma.post.update({
+      where: { id: req.params.id },
+      data: { title, contentBody, status }
+    });
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE a post
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.post.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
