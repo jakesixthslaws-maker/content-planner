@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { clerkMiddleware, requireAuth } = require('@clerk/express');
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
@@ -10,6 +11,7 @@ const prisma = new PrismaClient({ adapter });
 
 app.use(cors());
 app.use(express.json());
+app.use(clerkMiddleware());
 
 // Test route
 app.get('/', (req, res) => {

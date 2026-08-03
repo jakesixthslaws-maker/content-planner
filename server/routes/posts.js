@@ -1,3 +1,4 @@
+const { requireAuth } = require('@clerk/express');
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
@@ -6,7 +7,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // GET all posts
-router.get('/', async (req, res) => {
+router.get('/', requireAuth(), async (req, res) => {
   try {
     const posts = await prisma.post.findMany({
       orderBy: { createdAt: 'desc' }
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET single post by id
-router.get('/:id', async (req, res) => {
+  router.get('/:id', async (req, res) => {
   try {
     const post = await prisma.post.findUnique({
       where: { id: req.params.id }
@@ -31,9 +32,10 @@ router.get('/:id', async (req, res) => {
 });
 
 // CREATE a post
-router.post('/', async (req, res) => {
+router.post('/', requireAuth(), async (req, res) => {
   try {
-    const { title, contentBody, status, userId } = req.body;
+  const { title, contentBody, status } = req.body;
+const { userId } = req.auth();
     const post = await prisma.post.create({
       data: { title, contentBody, status, userId }
     });
@@ -44,7 +46,7 @@ router.post('/', async (req, res) => {
 });
 
 // UPDATE a post
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAuth(), async (req, res) => {
   try {
     const { title, contentBody, status } = req.body;
     const post = await prisma.post.update({
@@ -58,7 +60,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE a post
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAuth(), async (req, res) => {
   try {
     await prisma.post.delete({ where: { id: req.params.id } });
     res.status(204).send();
