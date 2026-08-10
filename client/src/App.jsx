@@ -1,29 +1,135 @@
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react'
+import { useState, useEffect } from 'react'
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/clerk-react'
 import './App.css'
+
+function Dashboard() {
+  const { getToken } = useAuth()
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [newTitle, setNewTitle] = useState('')
+
+  const syncUser = async () => {
+    try {
+      const token = await getToken()
+      await fetch('http://localhost:5000/api/users/sync', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    } catch (err) {
+      console.error('Sync error:', err.message)
+    }
+  }
+
+  const fetchPosts = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = await getToken()
+      const res = await fetch('http://localhost:5000/api/posts', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      const data = await res.json()
+      setPosts(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createPost = async () => {
+    if (!newTitle.trim()) return
+    try {
+      const token = await getToken()
+      const res = await fetch('http://localhost:5000/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ title: newTitle, contentBody: '', status: 'IDEA' })
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      setNewTitle('')
+      fetchPosts()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  useEffect(() => {
+    syncUser().then(fetchPosts)
+  }, [])
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e8e2d4', padding: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1>Content Planner</h1>
+        <UserButton />
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        <input
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          placeholder="New post title..."
+          style={{ flex: 1, padding: '8px 12px', background: '#141210', border: '1px solid #26221b', borderRadius: '6px', color: '#e8e2d4' }}
+        />
+        <button
+          onClick={createPost}
+          style={{ padding: '8px 16px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+        >
+          Add
+        </button>
+      </div>
+
+      {loading && <p style={{ color: '#8a8578' }}>Loading posts...</p>}
+      {error && <p style={{ color: '#c96a6a' }}>Error: {error}</p>}
+
+      {!loading && !error && posts.length === 0 && (
+        <p style={{ color: '#8a8578' }}>No posts yet. Time to add your first one.</p>
+      )}
+
+      {!loading && !error && posts.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {posts.map((post) => (
+            <div key={post.id} style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '16px' }}>
+              <h3 style={{ margin: 0 }}>{post.title}</h3>
+              <p style={{ color: '#8a8578', margin: '8px 0 0' }}>{post.contentBody}</p>
+              <span style={{ fontSize: '12px', color: '#c9a227' }}>{post.status}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function App() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e8e2d4', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-      <h1>Content Planner</h1>
-
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e8e2d4' }}>
       <SignedOut>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <SignInButton mode="modal">
-            <button style={{ padding: '10px 20px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-              Sign In
-            </button>
-          </SignInButton>
-          <SignUpButton mode="modal">
-            <button style={{ padding: '10px 20px', background: 'transparent', color: '#e8e2d4', border: '1px solid #26221b', borderRadius: '6px', cursor: 'pointer' }}>
-              Sign Up
-            </button>
-          </SignUpButton>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+          <h1>Content Planner</h1>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <SignInButton mode="modal">
+              <button style={{ padding: '10px 20px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button style={{ padding: '10px 20px', background: 'transparent', color: '#e8e2d4', border: '1px solid #26221b', borderRadius: '6px', cursor: 'pointer' }}>
+                Sign Up
+              </button>
+            </SignUpButton>
+          </div>
         </div>
       </SignedOut>
 
       <SignedIn>
-        <p>You're signed in.</p>
-        <UserButton />
+        <Dashboard />
       </SignedIn>
     </div>
   )

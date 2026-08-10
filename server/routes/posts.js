@@ -37,15 +37,19 @@ router.get('/:id', async (req, res) => {
 
 // CREATE a post
 router.post('/', async (req, res) => {
-  const { userId } = getAuth(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const { userId: clerkUserId } = getAuth(req);
+  if (!clerkUserId) return res.status(401).json({ error: 'Unauthorized' });
   try {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return res.status(404).json({ error: 'User not found. Try refreshing to sync your account.' });
+
     const { title, contentBody, status } = req.body;
     const post = await prisma.post.create({
-      data: { title, contentBody, status, userId }
+      data: { title, contentBody, status, userId: user.id }
     });
     res.status(201).json(post);
   } catch (err) {
+    console.error('CREATE POST ERROR:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

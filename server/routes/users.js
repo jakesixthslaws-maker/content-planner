@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('@clerk/express');
+const { getAuth } = require('@clerk/express');
 const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // Sync the logged-in Clerk user with our database
-// Call this once after login (e.g. when the frontend dashboard loads)
-router.post('/sync', requireAuth(), async (req, res) => {
-  try {
-    const { userId } = req.auth();
+router.post('/sync', async (req, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
+  try {
     let user = await prisma.user.findUnique({
       where: { clerkUserId: userId }
     });
@@ -24,6 +24,7 @@ router.post('/sync', requireAuth(), async (req, res) => {
 
     res.json(user);
   } catch (err) {
+    console.error('SYNC USER ERROR:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
