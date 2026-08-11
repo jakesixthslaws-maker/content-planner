@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/clerk-react'
 import './App.css'
 
+const STATUSES = ['IDEA', 'SCRIPTED', 'FILMED', 'POSTED']
+
 function Dashboard() {
   const { getToken } = useAuth()
   const [posts, setPosts] = useState([])
@@ -59,6 +61,38 @@ function Dashboard() {
     }
   }
 
+  const updatePostStatus = async (postId, newStatus) => {
+    try {
+      const token = await getToken()
+      const res = await fetch(`http://localhost:5000/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      fetchPosts()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const deletePost = async (postId) => {
+    try {
+      const token = await getToken()
+      const res = await fetch(`http://localhost:5000/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      fetchPosts()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   useEffect(() => {
     syncUser().then(fetchPosts)
   }, [])
@@ -70,7 +104,7 @@ function Dashboard() {
         <UserButton />
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
         <input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
@@ -88,17 +122,35 @@ function Dashboard() {
       {loading && <p style={{ color: '#8a8578' }}>Loading posts...</p>}
       {error && <p style={{ color: '#c96a6a' }}>Error: {error}</p>}
 
-      {!loading && !error && posts.length === 0 && (
-        <p style={{ color: '#8a8578' }}>No posts yet. Time to add your first one.</p>
-      )}
-
-      {!loading && !error && posts.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {posts.map((post) => (
-            <div key={post.id} style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '16px' }}>
-              <h3 style={{ margin: 0 }}>{post.title}</h3>
-              <p style={{ color: '#8a8578', margin: '8px 0 0' }}>{post.contentBody}</p>
-              <span style={{ fontSize: '12px', color: '#c9a227' }}>{post.status}</span>
+      {!loading && !error && (
+        <div style={{ display: 'flex', gap: '16px', overflowX: 'auto' }}>
+          {STATUSES.map((status) => (
+            <div key={status} style={{ minWidth: '260px', flex: '0 0 260px' }}>
+              <h3 style={{ fontSize: '14px', color: '#c9a227', marginBottom: '10px' }}>
+                {status} ({posts.filter(p => p.status === status).length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {posts.filter(p => p.status === status).map((post) => (
+                  <div key={post.id} style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px' }}>
+                    <p style={{ margin: '0 0 10px', fontSize: '14px' }}>{post.title}</p>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <select
+                        value={post.status}
+                        onChange={(e) => updatePostStatus(post.id, e.target.value)}
+                        style={{ flex: 1, background: '#0a0a0a', color: '#e8e2d4', border: '1px solid #26221b', borderRadius: '4px', padding: '4px', fontSize: '12px' }}
+                      >
+                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <button
+                        onClick={() => deletePost(post.id)}
+                        style={{ background: 'transparent', color: '#8a8578', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

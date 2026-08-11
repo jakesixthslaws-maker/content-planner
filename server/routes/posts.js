@@ -36,6 +36,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // CREATE a post
+
 router.post('/', async (req, res) => {
   const { userId: clerkUserId } = getAuth(req);
   if (!clerkUserId) return res.status(401).json({ error: 'Unauthorized' });
@@ -59,13 +60,18 @@ router.put('/:id', async (req, res) => {
   const { userId } = getAuth(req);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   try {
-    const { title, contentBody, status } = req.body;
+    const data = {};
+    if (req.body.title !== undefined) data.title = req.body.title;
+    if (req.body.contentBody !== undefined) data.contentBody = req.body.contentBody;
+    if (req.body.status !== undefined) data.status = req.body.status;
+
     const post = await prisma.post.update({
       where: { id: req.params.id },
-      data: { title, contentBody, status }
+      data
     });
     res.json(post);
   } catch (err) {
+    console.error('UPDATE POST ERROR:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
