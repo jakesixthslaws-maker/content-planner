@@ -10,6 +10,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [newTitle, setNewTitle] = useState('')
+  const [analytics, setAnalytics] = useState(null)
 
   const syncUser = async () => {
     try {
@@ -41,6 +42,20 @@ function Dashboard() {
     }
   }
 
+  const fetchAnalytics = async () => {
+    try {
+      const token = await getToken()
+      const res = await fetch('http://localhost:5000/api/analytics', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      const data = await res.json()
+      setAnalytics(data)
+    } catch (err) {
+      console.error('Analytics fetch error:', err.message)
+    }
+  }
+
   const createPost = async () => {
     if (!newTitle.trim()) return
     try {
@@ -56,6 +71,7 @@ function Dashboard() {
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       setNewTitle('')
       fetchPosts()
+      fetchAnalytics()
     } catch (err) {
       setError(err.message)
     }
@@ -74,6 +90,7 @@ function Dashboard() {
       })
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       fetchPosts()
+      fetchAnalytics()
     } catch (err) {
       setError(err.message)
     }
@@ -88,13 +105,17 @@ function Dashboard() {
       })
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       fetchPosts()
+      fetchAnalytics()
     } catch (err) {
       setError(err.message)
     }
   }
 
   useEffect(() => {
-    syncUser().then(fetchPosts)
+    syncUser().then(() => {
+      fetchPosts()
+      fetchAnalytics()
+    })
   }, [])
 
   return (
@@ -104,7 +125,7 @@ function Dashboard() {
         <UserButton />
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
         <input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
@@ -118,6 +139,23 @@ function Dashboard() {
           Add
         </button>
       </div>
+
+      {analytics && (
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px 16px' }}>
+            <div style={{ fontSize: '11px', color: '#8a8578', textTransform: 'uppercase' }}>Total Posts</div>
+            <div style={{ fontSize: '20px', fontWeight: 600 }}>{analytics.total}</div>
+          </div>
+          <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px 16px' }}>
+            <div style={{ fontSize: '11px', color: '#8a8578', textTransform: 'uppercase' }}>Posted</div>
+            <div style={{ fontSize: '20px', fontWeight: 600, color: '#c9a227' }}>{analytics.byStatus.POSTED}</div>
+          </div>
+          <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px 16px' }}>
+            <div style={{ fontSize: '11px', color: '#8a8578', textTransform: 'uppercase' }}>In Progress</div>
+            <div style={{ fontSize: '20px', fontWeight: 600 }}>{analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED}</div>
+          </div>
+        </div>
+      )}
 
       {loading && <p style={{ color: '#8a8578' }}>Loading posts...</p>}
       {error && <p style={{ color: '#c96a6a' }}>Error: {error}</p>}
