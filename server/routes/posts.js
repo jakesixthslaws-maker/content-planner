@@ -53,6 +53,9 @@ router.post('/', async (req, res) => {
     console.error('CREATE POST ERROR:', err.message);
     res.status(500).json({ error: err.message });
   }
+      if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
 });
 
 // UPDATE a post
