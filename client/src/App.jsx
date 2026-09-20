@@ -3,7 +3,6 @@ import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth } 
 import './App.css'
 
 const STATUSES = ['IDEA', 'SCRIPTED', 'FILMED', 'POSTED']
-
 function Dashboard() {
   const { getToken } = useAuth()
   const [posts, setPosts] = useState([])
@@ -11,6 +10,10 @@ function Dashboard() {
   const [error, setError] = useState(null)
   const [newTitle, setNewTitle] = useState('')
   const [analytics, setAnalytics] = useState(null)
+  const [aiTopic, setAiTopic] = useState('')
+  const [aiTone, setAiTone] = useState('')
+  const [aiIdeas, setAiIdeas] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
 
   const syncUser = async () => {
     try {
@@ -53,6 +56,30 @@ function Dashboard() {
       setAnalytics(data)
     } catch (err) {
       console.error('Analytics fetch error:', err.message)
+    }
+  }
+
+  const generateIdeas = async () => {
+    if (!aiTopic.trim()) return
+    setAiLoading(true)
+    setAiIdeas('')
+    try {
+      const token = await getToken()
+      const res = await fetch('http://localhost:5000/api/ai/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ topic: aiTopic, tone: aiTone })
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      const data = await res.json()
+      setAiIdeas(data.ideas)
+    } catch (err) {
+      setAiIdeas(`Error: ${err.message}`)
+    } finally {
+      setAiLoading(false)
     }
   }
 
@@ -156,6 +183,34 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '16px', marginBottom: '24px' }}>
+        <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#c9a227' }}>✨ Generate content ideas</h3>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <input
+            value={aiTopic}
+            onChange={(e) => setAiTopic(e.target.value)}
+            placeholder="Topic (e.g. morning workout routine)"
+            style={{ flex: 1, padding: '8px 12px', background: '#0a0a0a', border: '1px solid #26221b', borderRadius: '6px', color: '#e8e2d4' }}
+          />
+          <input
+            value={aiTone}
+            onChange={(e) => setAiTone(e.target.value)}
+            placeholder="Tone (optional)"
+            style={{ flex: 1, padding: '8px 12px', background: '#0a0a0a', border: '1px solid #26221b', borderRadius: '6px', color: '#e8e2d4' }}
+          />
+          <button
+            onClick={generateIdeas}
+            disabled={aiLoading}
+            style={{ padding: '8px 16px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            {aiLoading ? 'Generating...' : 'Generate'}
+          </button>
+        </div>
+        {aiIdeas && (
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: '13px', color: '#8a8578', marginTop: '12px' }}>{aiIdeas}</pre>
+        )}
+      </div>
 
       {loading && <p style={{ color: '#8a8578' }}>Loading posts...</p>}
       {error && <p style={{ color: '#c96a6a' }}>Error: {error}</p>}
