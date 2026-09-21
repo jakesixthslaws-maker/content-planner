@@ -3,6 +3,7 @@ import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth } 
 import './App.css'
 
 const STATUSES = ['IDEA', 'SCRIPTED', 'FILMED', 'POSTED']
+
 function Dashboard() {
   const { getToken } = useAuth()
   const [posts, setPosts] = useState([])
@@ -146,106 +147,112 @@ function Dashboard() {
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e8e2d4', padding: '32px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1>Content Planner</h1>
+    <div className="dashboard">
+      <div className="dashboard-header">
+        <div className="brand-wrapper">
+          <div className="brand-icon">⚡</div>
+          <h1 className="dashboard-title">Content Planner</h1>
+        </div>
         <UserButton />
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-        <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="New post title..."
-          style={{ flex: 1, padding: '8px 12px', background: '#141210', border: '1px solid #26221b', borderRadius: '6px', color: '#e8e2d4' }}
-        />
-        <button
-          onClick={createPost}
-          style={{ padding: '8px 16px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-        >
-          Add
-        </button>
+      <div className="add-post-card">
+        <div className="add-post-row">
+          <input
+            className="text-input"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Write a new post title or idea..."
+          />
+          <button className="btn-primary" onClick={createPost}>
+            + Add Post
+          </button>
+        </div>
       </div>
 
       {analytics && (
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px 16px' }}>
-            <div style={{ fontSize: '11px', color: '#8a8578', textTransform: 'uppercase' }}>Total Posts</div>
-            <div style={{ fontSize: '20px', fontWeight: 600 }}>{analytics.total}</div>
+        <div className="stats-row">
+          <div className="stat-card">
+            <div className="stat-label">Total Posts</div>
+            <div className="stat-value">{analytics.total}</div>
           </div>
-          <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px 16px' }}>
-            <div style={{ fontSize: '11px', color: '#8a8578', textTransform: 'uppercase' }}>Posted</div>
-            <div style={{ fontSize: '20px', fontWeight: 600, color: '#c9a227' }}>{analytics.byStatus.POSTED}</div>
+          <div className="stat-card">
+            <div className="stat-label">Posted</div>
+            <div className="stat-value accent">{analytics.byStatus.POSTED}</div>
           </div>
-          <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px 16px' }}>
-            <div style={{ fontSize: '11px', color: '#8a8578', textTransform: 'uppercase' }}>In Progress</div>
-            <div style={{ fontSize: '20px', fontWeight: 600 }}>{analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED}</div>
+          <div className="stat-card">
+            <div className="stat-label">In Pipeline</div>
+            <div className="stat-value">{analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED + analytics.byStatus.IDEA}</div>
           </div>
         </div>
       )}
 
-      <div style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '16px', marginBottom: '24px' }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#c9a227' }}>✨ Generate content ideas</h3>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+      <div className="ai-panel">
+        <div className="ai-panel-header">
+          <span className="ai-panel-title">✨ Gemini AI Assistant</span>
+        </div>
+        <div className="ai-panel-row">
           <input
+            className="ai-panel-input"
             value={aiTopic}
             onChange={(e) => setAiTopic(e.target.value)}
-            placeholder="Topic (e.g. morning workout routine)"
-            style={{ flex: 1, padding: '8px 12px', background: '#0a0a0a', border: '1px solid #26221b', borderRadius: '6px', color: '#e8e2d4' }}
+            placeholder="Topic (e.g. 5 productivity tips for developers)"
           />
           <input
+            className="ai-panel-input"
             value={aiTone}
             onChange={(e) => setAiTone(e.target.value)}
-            placeholder="Tone (optional)"
-            style={{ flex: 1, padding: '8px 12px', background: '#0a0a0a', border: '1px solid #26221b', borderRadius: '6px', color: '#e8e2d4' }}
+            placeholder="Tone (e.g. Casual, Professional)"
           />
-          <button
-            onClick={generateIdeas}
-            disabled={aiLoading}
-            style={{ padding: '8px 16px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-          >
-            {aiLoading ? 'Generating...' : 'Generate'}
+          <button className="btn-primary btn-ai" onClick={generateIdeas} disabled={aiLoading}>
+            {aiLoading ? 'Generating...' : 'Generate Content'}
           </button>
         </div>
-        {aiIdeas && (
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: '13px', color: '#8a8578', marginTop: '12px' }}>{aiIdeas}</pre>
-        )}
+        {aiIdeas && <pre className="ai-output">{aiIdeas}</pre>}
       </div>
 
-      {loading && <p style={{ color: '#8a8578' }}>Loading posts...</p>}
-      {error && <p style={{ color: '#c96a6a' }}>Error: {error}</p>}
+      {loading && <p className="status-message loading">Loading post pipeline...</p>}
+      {error && <p className="status-message error">Error: {error}</p>}
 
       {!loading && !error && (
-        <div style={{ display: 'flex', gap: '16px', overflowX: 'auto' }}>
-          {STATUSES.map((status) => (
-            <div key={status} style={{ minWidth: '260px', flex: '0 0 260px' }}>
-              <h3 style={{ fontSize: '14px', color: '#c9a227', marginBottom: '10px' }}>
-                {status} ({posts.filter(p => p.status === status).length})
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {posts.filter(p => p.status === status).map((post) => (
-                  <div key={post.id} style={{ background: '#141210', border: '1px solid #26221b', borderRadius: '8px', padding: '12px' }}>
-                    <p style={{ margin: '0 0 10px', fontSize: '14px' }}>{post.title}</p>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <select
-                        value={post.status}
-                        onChange={(e) => updatePostStatus(post.id, e.target.value)}
-                        style={{ flex: 1, background: '#0a0a0a', color: '#e8e2d4', border: '1px solid #26221b', borderRadius: '4px', padding: '4px', fontSize: '12px' }}
-                      >
-                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                      <button
-                        onClick={() => deletePost(post.id)}
-                        style={{ background: 'transparent', color: '#8a8578', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
+        <div className="board">
+          {STATUSES.map((status) => {
+            const filteredPosts = posts.filter(p => p.status === status)
+            return (
+              <div key={status} className="board-column">
+                <div className="column-header">
+                  <div className="column-title-group">
+                    <span className={`status-dot ${status}`}></span>
+                    <h3 className="column-title">{status}</h3>
                   </div>
-                ))}
+                  <span className="column-badge">{filteredPosts.length}</span>
+                </div>
+                <div className="column-posts">
+                  {filteredPosts.length === 0 ? (
+                    <div className="empty-state">No items in {status.toLowerCase()}</div>
+                  ) : (
+                    filteredPosts.map((post) => (
+                      <div key={post.id} className="post-card">
+                        <p className="post-title">{post.title}</p>
+                        <div className="post-controls">
+                          <select
+                            className="status-select"
+                            value={post.status}
+                            onChange={(e) => updatePostStatus(post.id, e.target.value)}
+                          >
+                            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                          <button className="delete-btn" onClick={() => deletePost(post.id)} title="Delete Post">
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -254,20 +261,18 @@ function Dashboard() {
 
 function App() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e8e2d4' }}>
+    <div className="app-shell">
       <SignedOut>
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-          <h1>Content Planner</h1>
-          <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="auth-screen">
+          <span className="auth-badge">Content Creation Platform</span>
+          <h1 className="auth-title">Content Planner</h1>
+          <p className="auth-subtitle">Plan, manage, and scale your social media pipeline with built-in AI assistance.</p>
+          <div className="auth-buttons">
             <SignInButton mode="modal">
-              <button style={{ padding: '10px 20px', background: '#c9a227', color: '#0a0a0a', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                Sign In
-              </button>
+              <button className="btn-primary">Sign In</button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button style={{ padding: '10px 20px', background: 'transparent', color: '#e8e2d4', border: '1px solid #26221b', borderRadius: '6px', cursor: 'pointer' }}>
-                Sign Up
-              </button>
+              <button className="btn-secondary">Sign Up</button>
             </SignUpButton>
           </div>
         </div>

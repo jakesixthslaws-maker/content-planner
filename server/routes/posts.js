@@ -8,10 +8,14 @@ const prisma = new PrismaClient({ adapter });
 
 // GET all posts
 router.get('/', async (req, res) => {
-  const { userId } = getAuth(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const { userId: clerkUserId } = getAuth(req);
+  if (!clerkUserId) return res.status(401).json({ error: 'Unauthorized' });
   try {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
     const posts = await prisma.post.findMany({
+      where: { userId: user.id },
       orderBy: { createdAt: 'desc' }
     });
     res.json(posts);
@@ -22,13 +26,18 @@ router.get('/', async (req, res) => {
 
 // GET single post by id
 router.get('/:id', async (req, res) => {
-  const { userId } = getAuth(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const { userId: clerkUserId } = getAuth(req);
+  if (!clerkUserId) return res.status(401).json({ error: 'Unauthorized' });
   try {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
     const post = await prisma.post.findUnique({
       where: { id: req.params.id }
     });
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!post || post.userId !== user.id) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
     res.json(post);
   } catch (err) {
     res.status(500).json({ error: err.message });
