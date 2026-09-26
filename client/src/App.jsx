@@ -149,25 +149,20 @@ function Dashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <div className="brand-wrapper">
-          <div className="brand-icon">⚡</div>
-          <h1 className="dashboard-title">Content Planner</h1>
-        </div>
+        <h1 className="dashboard-title">Content Planner</h1>
         <UserButton />
       </div>
 
-      <div className="add-post-card">
-        <div className="add-post-row">
-          <input
-            className="text-input"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="Write a new post title or idea..."
-          />
-          <button className="btn-primary" onClick={createPost}>
-            + Add Post
-          </button>
-        </div>
+      <div className="add-post-row">
+        <input
+          className="text-input"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          placeholder="New post title..."
+        />
+        <button className="btn-primary" onClick={createPost}>
+          Add
+        </button>
       </div>
 
       {analytics && (
@@ -181,78 +176,65 @@ function Dashboard() {
             <div className="stat-value accent">{analytics.byStatus.POSTED}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">In Pipeline</div>
-            <div className="stat-value">{analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED + analytics.byStatus.IDEA}</div>
+            <div className="stat-label">In Progress</div>
+            <div className="stat-value">{analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED}</div>
           </div>
         </div>
       )}
 
       <div className="ai-panel">
-        <div className="ai-panel-header">
-          <span className="ai-panel-title">✨ Gemini AI Assistant</span>
-        </div>
+        <h3 className="ai-panel-title">✨ Generate content ideas</h3>
         <div className="ai-panel-row">
           <input
             className="ai-panel-input"
             value={aiTopic}
             onChange={(e) => setAiTopic(e.target.value)}
-            placeholder="Topic (e.g. 5 productivity tips for developers)"
+            placeholder="Topic (e.g. morning workout routine)"
           />
           <input
             className="ai-panel-input"
             value={aiTone}
             onChange={(e) => setAiTone(e.target.value)}
-            placeholder="Tone (e.g. Casual, Professional)"
+            placeholder="Tone (optional)"
           />
-          <button className="btn-primary btn-ai" onClick={generateIdeas} disabled={aiLoading}>
-            {aiLoading ? 'Generating...' : 'Generate Content'}
+          <button className="btn-primary" onClick={generateIdeas} disabled={aiLoading}>
+            {aiLoading ? 'Generating...' : 'Generate'}
           </button>
         </div>
         {aiIdeas && <pre className="ai-output">{aiIdeas}</pre>}
       </div>
 
-      {loading && <p className="status-message loading">Loading post pipeline...</p>}
+      {loading && <p className="status-message loading">Loading posts...</p>}
       {error && <p className="status-message error">Error: {error}</p>}
 
       {!loading && !error && (
         <div className="board">
-          {STATUSES.map((status) => {
-            const filteredPosts = posts.filter(p => p.status === status)
-            return (
-              <div key={status} className="board-column">
-                <div className="column-header">
-                  <div className="column-title-group">
-                    <span className={`status-dot ${status}`}></span>
-                    <h3 className="column-title">{status}</h3>
+          {STATUSES.map((status) => (
+            <div key={status} className="board-column">
+              <h3 className="column-header">
+                {status} ({posts.filter(p => p.status === status).length})
+              </h3>
+              <div className="column-posts">
+                {posts.filter(p => p.status === status).map((post) => (
+                  <div key={post.id} className="post-card">
+                    <p className="post-title">{post.title}</p>
+                    <div className="post-controls">
+                      <select
+                        className="status-select"
+                        value={post.status}
+                        onChange={(e) => updatePostStatus(post.id, e.target.value)}
+                      >
+                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <button className="delete-btn" onClick={() => deletePost(post.id)}>
+                        ✕
+                      </button>
+                    </div>
                   </div>
-                  <span className="column-badge">{filteredPosts.length}</span>
-                </div>
-                <div className="column-posts">
-                  {filteredPosts.length === 0 ? (
-                    <div className="empty-state">No items in {status.toLowerCase()}</div>
-                  ) : (
-                    filteredPosts.map((post) => (
-                      <div key={post.id} className="post-card">
-                        <p className="post-title">{post.title}</p>
-                        <div className="post-controls">
-                          <select
-                            className="status-select"
-                            value={post.status}
-                            onChange={(e) => updatePostStatus(post.id, e.target.value)}
-                          >
-                            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                          <button className="delete-btn" onClick={() => deletePost(post.id)} title="Delete Post">
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                ))}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -264,9 +246,7 @@ function App() {
     <div className="app-shell">
       <SignedOut>
         <div className="auth-screen">
-          <span className="auth-badge">Content Creation Platform</span>
           <h1 className="auth-title">Content Planner</h1>
-          <p className="auth-subtitle">Plan, manage, and scale your social media pipeline with built-in AI assistance.</p>
           <div className="auth-buttons">
             <SignInButton mode="modal">
               <button className="btn-primary">Sign In</button>
