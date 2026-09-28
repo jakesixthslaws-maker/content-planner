@@ -75,7 +75,10 @@ function Dashboard() {
         },
         body: JSON.stringify({ topic: aiTopic, tone: aiTone })
       })
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+           if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.friendly || 'Something went wrong. Please try again.')
+      }
       const data = await res.json()
       setAiIdeas(data.ideas)
     } catch (err) {
@@ -209,8 +212,8 @@ function Dashboard() {
             {aiLoading ? 'Generating...' : 'Generate Content'}
           </button>
         </div>
-        {aiIdeas && <pre className="ai-output">{aiIdeas}</pre>}
-      </div>
+        {aiIdeas && <pre className="ai-output">{aiIdeas.replace(/\*\*/g, '')}</pre>}
+              </div>
 
       {loading && <p className="status-message loading">Loading post pipeline...</p>}
       {error && <p className="status-message error">Error: {error}</p>}
