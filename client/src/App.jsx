@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, UserButton, useAuth, useClerk } from '@clerk/clerk-react'
+import Landing from './components/Landing'
+import ShareBar from './components/ShareBar'
 import './App.css'
 
 const STATUSES = ['IDEA', 'SCRIPTED', 'FILMED', 'POSTED']
@@ -75,7 +77,7 @@ function Dashboard() {
         },
         body: JSON.stringify({ topic: aiTopic, tone: aiTone })
       })
-           if (!res.ok) {
+      if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body.friendly || 'Something went wrong. Please try again.')
       }
@@ -150,6 +152,9 @@ function Dashboard() {
     })
   }, [])
 
+  const cleanIdeas = aiIdeas.replace(/\*\*/g, '')
+  const aiIsError = aiIdeas.startsWith('Error:')
+
   return (
     <div className="dashboard">
       <div className="dashboard-header">
@@ -166,6 +171,7 @@ function Dashboard() {
             className="text-input"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && createPost()}
             placeholder="Write a new post title or idea..."
           />
           <button className="btn-primary" onClick={createPost}>
@@ -186,7 +192,9 @@ function Dashboard() {
           </div>
           <div className="stat-card">
             <div className="stat-label">In Pipeline</div>
-            <div className="stat-value">{analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED + analytics.byStatus.IDEA}</div>
+            <div className="stat-value">
+              {analytics.byStatus.SCRIPTED + analytics.byStatus.FILMED + analytics.byStatus.IDEA}
+            </div>
           </div>
         </div>
       )}
@@ -212,8 +220,13 @@ function Dashboard() {
             {aiLoading ? 'Generating...' : 'Generate Content'}
           </button>
         </div>
-        {aiIdeas && <pre className="ai-output">{aiIdeas.replace(/\*\*/g, '')}</pre>}
-              </div>
+        {aiIdeas && (
+          <>
+            <pre className="ai-output">{cleanIdeas}</pre>
+            <ShareBar text={aiIsError ? '' : cleanIdeas} />
+          </>
+        )}
+      </div>
 
       {loading && <p className="status-message loading">Loading post pipeline...</p>}
       {error && <p className="status-message error">Error: {error}</p>}
@@ -221,7 +234,7 @@ function Dashboard() {
       {!loading && !error && (
         <div className="board">
           {STATUSES.map((status) => {
-            const filteredPosts = posts.filter(p => p.status === status)
+            const filteredPosts = posts.filter((p) => p.status === status)
             return (
               <div key={status} className="board-column">
                 <div className="column-header">
@@ -244,12 +257,21 @@ function Dashboard() {
                             value={post.status}
                             onChange={(e) => updatePostStatus(post.id, e.target.value)}
                           >
-                            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                            {STATUSES.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
                           </select>
-                          <button className="delete-btn" onClick={() => deletePost(post.id)} title="Delete Post">
+                          <button
+                            className="delete-btn"
+                            onClick={() => deletePost(post.id)}
+                            title="Delete Post"
+                          >
                             ✕
                           </button>
                         </div>
+                        {(post.status === 'SCRIPTED' || post.status === 'FILMED') && (
+                          <ShareBar text={post.contentBody || post.title} />
+                        )}
                       </div>
                     ))
                   )}
@@ -264,22 +286,12 @@ function Dashboard() {
 }
 
 function App() {
+  const { openSignIn } = useClerk()
+
   return (
     <div className="app-shell">
       <SignedOut>
-        <div className="auth-screen">
-          <span className="auth-badge">Content Creation Platform</span>
-          <h1 className="auth-title">Content Planner</h1>
-          <p className="auth-subtitle">Plan, manage, and scale your social media pipeline with built-in AI assistance.</p>
-          <div className="auth-buttons">
-            <SignInButton mode="modal">
-              <button className="btn-primary">Sign In</button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="btn-secondary">Sign Up</button>
-            </SignUpButton>
-          </div>
-        </div>
+        <Landing onStart={() => openSignIn()} />
       </SignedOut>
 
       <SignedIn>
