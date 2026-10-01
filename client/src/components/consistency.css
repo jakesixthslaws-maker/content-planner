@@ -1,0 +1,45 @@
+.consistency {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding: 22px 26px;
+  background: #0c0d13;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+}
+
+.cons-ring { position: relative; width: 88px; height: 88px; }
+.ring-bg { fill: none; stroke: rgba(255, 255, 255, 0.08); stroke-width: 6; }
+.ring-fg { fill: none; stroke: #ff7a3d; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; filter: drop-shadow(0 0 6px rgba(255, 122, 61, 0.6)); }
+.ring-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring-text b { font: 300 1.7rem/1 "Outfit", sans-serif; }
+.ring-text span { font-size: 0.7rem; color: #9a9db3; }
+
+.cons-main h2 { margin: 0 0 6px; font: 400 1.25rem "Outfit", sans-serif; }
+.cons-main p { margin: 0 0 12px; color: #c4c6d8; font-size: 0.9rem; line-height: 1.5; }
+.cons-left { color: #9a9db3; }
+.cons-goal { display: inline-flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #9a9db3; }
+.cons-goal select {
+  background: #000; color: #e4e5ef; border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px; padding: 6px 12px; font: 500 0.8rem "Figtree", sans-serif; cursor: pointer;
+}
+
+.cons-side { display: grid; gap: 12px; justify-items: end; }
+.cons-streak { display: flex; align-items: baseline; gap: 8px; }
+.cons-streak b { font: 300 2.4rem/1 "Outfit", sans-serif; color: #ffb27a; }
+.cons-streak span { font-size: 0.8rem; color: #9a9db3; }
+
+.cons-grid { display: grid; grid-template-columns: repeat(7, 14px); gap: 4px; }
+.cell { width: 14px; height: 14px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); }
+.cell.c1 { background: rgba(255, 122, 61, 0.4); }
+.cell.c2 { background: rgba(255, 122, 61, 0.7); }
+.cell.c3 { background: #ff7a3d; box-shadow: 0 0 8px rgba(255, 122, 61, 0.7); }
+.cell.future { opacity: 0.35; }
+.cell.today { outline: 1.5px solid #8b8df7; outline-offset: 1px; }
+
+@media (max-width: 760px) {
+  .consistency { grid-template-columns: 1fr; justify-items: start; }
+  .cons-side { justify-items: start; }
+}

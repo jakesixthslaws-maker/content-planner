@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { SignedIn, SignedOut, UserButton, useAuth, useClerk } from '@clerk/clerk-react'
 import Landing from './components/Landing'
 import ShareBar from './components/ShareBar'
+import ConsistencyCard from './components/ConsistencyCard'
 import './App.css'
 
 const STATUSES = ['IDEA', 'SCRIPTED', 'FILMED', 'POSTED']
@@ -198,6 +199,8 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      <ConsistencyCard posts={posts} />
 
       <div className="ai-panel">
         <div className="ai-panel-header">

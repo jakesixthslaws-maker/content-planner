@@ -1,17 +1,26 @@
 import { PLATFORMS } from "./ShareBar";
+import LavaBlobs from "./LavaBlobs";
 import "./landing.css";
+
+const STATS = [
+  ["5", "platforms one tap away"],
+  ["1", "board for every post"],
+  ["AI", "captions in your tone"],
+];
 
 const BENEFITS = [
   {
+    tint: "ember",
     title: "Plan once, show up everywhere",
-    body: "Drop ideas on one board and move them from idea to scheduled to posted. No more scattered notes and missed days.",
+    body: "Drop ideas on one board and move them from idea to scripted, filmed and posted. No more scattered notes and missed days.",
   },
   {
+    tint: "indigo",
     title: "Captions in your brand's voice",
     body: "Pick a topic and a tone and the AI drafts the caption. Edit it, then send it straight to the platform.",
-    feature: true,
   },
   {
+    tint: "mix",
     title: "Consistency beats luck",
     body: "The big platforms reward accounts that post regularly. A visible pipeline makes regular posting the easy path.",
   },
@@ -26,8 +35,7 @@ export default function Landing({ onStart }) {
       </nav>
 
       <section className="hero">
-        <div className="blob blob-a" aria-hidden="true" />
-        <div className="blob blob-b" aria-hidden="true" />
+        <LavaBlobs />
 
         <h1 className="hero-title">
           <span className="t1">own</span>
@@ -40,28 +48,36 @@ export default function Landing({ onStart }) {
           consistently so your business is always in the feed.
         </p>
 
-        <div className="stat s1"><b>5</b><span>platforms one tap away</span></div>
-        <div className="stat s2"><b>1</b><span>board for every post</span></div>
-        <div className="stat s3"><b>AI</b><span>captions in your tone</span></div>
-
         <div className="cta-bar">
-          <span>ready when you are</span>
+          <span>Ready when you are</span>
           <button className="pill pill-warm" onClick={onStart}>Start planning</button>
         </div>
+
+        <dl className="hero-stats">
+          {STATS.map(([value, label]) => (
+            <div key={label}>
+              <dt>{value}</dt>
+              <dd>{label}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className="platforms" aria-label="Supported platforms">
-        {PLATFORMS.map((p) => (
-          <div key={p.id} className="plat">{p.name}</div>
-        ))}
+        <p className="section-lead">Publish where your customers already are.</p>
+        <div className="plat-row">
+          {PLATFORMS.map((p) => (
+            <div key={p.id} className="plat">{p.name}</div>
+          ))}
+        </div>
       </section>
 
       <section className="benefits">
         <h2>What you get</h2>
         <div className="b-grid">
           {BENEFITS.map((b) => (
-            <article key={b.title} className={`b-card ${b.feature ? "b-feature" : ""}`}>
-              {b.feature && <div className="blob blob-mini" aria-hidden="true" />}
+            <article key={b.title} className="b-card">
+              <div className={`orb orb-${b.tint}`} aria-hidden="true" />
               <h3>{b.title}</h3>
               <p>{b.body}</p>
             </article>
